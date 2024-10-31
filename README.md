@@ -6,21 +6,24 @@ This consists of two tools for EvE Online:
 
 ## je_wm
 
-![image](https://github.com/user-attachments/assets/69d32f47-5692-4c67-8931-6d2f8e02aeaa)
+![Screenshot](https://github.com/user-attachments/assets/f5d83290-08c2-447b-ba2c-b5983d079ff1)
 
- - "<": Switch to previous window
- - ":": Menu (Fits)
- - ">": Switch to next window
- - "Zzz": Hide this EvE window and skip over it 4 times"
- - "F": "Drones Engage"
- - [] Ctrl: Hold down Ctrl
- - "U": EVE University Wiki
- - "D": Launch Discord
- - F1-4: Press F1-4
- - "M": Minimize All
- - "R": Launch DotLan Route Planner
- - HH:MM:SS: Amount of time waster on current Window/Character
- - CHARACTER/WINDOW NAME: Click to paste an active character name
+ -  < : Switch to Previous Window
+ -  > : Switch to Next Window
+ -  ⋮ : Menu (fits)
+ -  💤 : Sleep (Skip 4 times)
+ -  F : Engage Drones?
+ -  U : UniWiki
+ -  D : Discord
+ -  ☑ Ctrl : Hold down Ctrl
+ -  🁤 : Tile Windows Vertically
+ -  HH:MM:SS : Time Spend on this Window Title
+ -  WinTitle : Currently Active Window/Character
+ -  # : Windows Key (Raise TaskBar)
+ -  M : Minimise All Windows
+ -  🚀 : DOTLAN Route Manager
+ -  🔔 : Yellow Alert
+ -  ⟳ : Reload this Script
 
 CCP doesn't whitelist scripts, but this does at most one in-game action per click.
 
