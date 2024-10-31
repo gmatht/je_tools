@@ -8,22 +8,22 @@ This consists of two tools for EvE Online:
 
 ![Screenshot](https://github.com/user-attachments/assets/f5d83290-08c2-447b-ba2c-b5983d079ff1)
 
- -  < : Switch to Previous Window
- -  > : Switch to Next Window
- -  ⋮ : Menu (fits)
- -  💤 : Sleep (Skip 4 times)
- -  F : Engage Drones?
- -  U : UniWiki
- -  D : Discord
- -  ☑ Ctrl : Hold down Ctrl
- -  🁤 : Tile Windows Vertically
+ -  "<" : Switch to Previous Window
+ -  ">" : Switch to Next Window
+ -  "⋮" : Menu (fits)
+ -  "💤" : Sleep (Skip 4 times)
+ -  "F" : Engage Drones?
+ -  "U" : UniWiki
+ -  "D" : Discord
+ -  "☑ Ctrl" : Hold down Ctrl
+ -  "🁤" : Tile Windows Vertically
  -  HH:MM:SS : Time Spend on this Window Title
  -  WinTitle : Currently Active Window/Character
- -  # : Windows Key (Raise TaskBar)
- -  M : Minimise All Windows
- -  🚀 : DOTLAN Route Manager
- -  🔔 : Yellow Alert
- -  ⟳ : Reload this Script
+ -  "#" : Windows Key (Raise TaskBar)
+ -  "M" : Minimise All Windows
+ -  "🚀" : DOTLAN Route Manager
+ -  "🔔" : Yellow Alert
+ -  "⟳" : Reload this Script
 
 CCP doesn't whitelist scripts, but this does at most one in-game action per click.
 
