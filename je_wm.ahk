@@ -5,7 +5,7 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
 
-
+mtoggle:=0
 groupid := []
 ;groupname := []
 ;groupw := []
@@ -14,6 +14,8 @@ groupcount = 0
 groupselect = 0
 gtile := FALSE
 dict := {"0x0000":0}
+timewasted := {"NULL":0}
+
 ;					CoordMode Mouse, Screen
 
 fits:={"NULL":0}
@@ -56,15 +58,15 @@ Gui Switch:new
 Gui Switch:Font, s40
 Gui Switch: +Caption +Border +ToolWindow +AlwaysOnTop
 ;Gui Switch: +ToolWindow +AlwaysOnTop
-Gui Switch:Add, Button, gswitchback x0 y0 w68 h64, <
-Gui Switch:Add, Button, gswitch x104 y0 w68 h64, >
+Gui Switch:Add, Button, gswitchback x0 y0 w68 h64, < ; Switch to Previous Window
+Gui Switch:Add, Button, gswitch x104 y0 w68 h64, > ; Switch to Next Window
 ;Gui Switch:Font
 Gui Switch:Font, s18
-Gui Switch:Add, Button, gmenu  x68 y0  w36 h64, :
-Gui Switch:Add, Button, gCtrlS x0  y64 w64 h32, Zzz
-Gui Switch:Add, Button, gOSK   x64 y64 w32 h32, F
-Gui Switch:Add, Button, gEveUni   x96 y64  w32 h32, U
-Gui Switch:Add, Button, gDiscord   x128 y64  w32 h32, D
+Gui Switch:Add, Button, gmenu  x68 y0  w36 h64, ? ; Menu (fits)
+Gui Switch:Add, Button, gCtrlS x0  y64 w64 h32, ?? ; Sleep (Skip 4 times)
+Gui Switch:Add, Button, gOSK   x64 y64 w32 h32, F ; Engage Drones?
+Gui Switch:Add, Button, gEveUni   x96 y64  w32 h32, U ; UniWiki
+Gui Switch:Add, Button, gDiscord   x128 y64  w32 h32, D ; Discord
 Gui Switch:Add, Button, gOSK   x0 y96 w44 h32, F1
 Gui Switch:Add, Button, gOSK   x44 y96 w44 h32, F2
 Gui Switch:Add, Button, gOSK   x88 y96 w44 h32, F3
@@ -72,19 +74,87 @@ Gui Switch:Add, Button, gOSK   x132 y96  w44 h32, F4
 ;Gui, Color, Red
 ;Gui Switch:Add, Button, gCtrlUp  x0  y128 w128 h32 c87BBFF, CtrlU
 ;Gui Switch:Add, Button, gCtrlDown  x0  y128 w128 h32  c87BBFF, CtrlD
-Gui, Switch:Add, CheckBox, vCtrlDown gCtrl x0 y128 w64 h32, Ctrl
-Gui Switch:Add, Button, gTile   x64 y128  w32 h32, T
+Gui, Switch:Add, CheckBox, vCtrlDown gCtrl x0 y128 w64 h32, Ctrl ; Hold down Ctrl
+Gui Switch:Add, Button, gTile   x64 y128  w32 h32, ?? ; Tile Windows Vertically
 Gui Switch:Font, s14
-Gui, Add, Text, cRed x96 y128 w128 vTextTimeWasted, HH:MM:SS
+Gui, Add, Text, cRed x96 y128 w128 vTextTimeWasted gTimeWasted, HH:MM:SS ; Time Spend on this Window Title
+;^ Click for Summary of Time Wasted e.g.:
+;^ ^EVE: Time spend on EVE that could have been spent in the sunshine admiring the flowers.
+;^ AFK: Time spent in the sunshine admiring the flowers that could have been spent earning ISK.
+;^ (Remember you have children to PLEX!!!)
 Gui Switch:Font, s8
-Gui, Add, Text, x96 y146 w128 vWinTitle gCopyWinTitle, WinTitle
+Gui, Add, Text, x96 y146 w128 vWinTitle gCopyWinTitle, WinTitle ; Currently Active Window/Character
 Gui Switch:Font, s18
-Gui Switch:Add, Button, gWinKey   x0 y160 w32 h32, #
-Gui Switch:Add, Button, gMinimizeAll   x32 y160 w32 h32, M
-Gui Switch:Add, Button, gRoutePlanner  x64 y160 w32 h32, R
-
+Gui Switch:Add, Button, gWinKey   x0 y160 w32 h32, # ; Windows Key (Raise TaskBar)
+Gui Switch:Add, Button, gMinimizeAll   x32 y160 w32 h32, M ; Minimise All Windows
+Gui Switch:Add, Button, gRoutePlanner  x64 y160 w32 h32, ?? ; DOTLAN Route Manager
+Gui Switch:Add, Button, gRoutePlanner  x96 y160 w32 h32, ?? ; Yellow Alert
+Gui Switch:Add, Button, gMyReload  x140 y160 w32 h32, ? ; Reload this Script
 Gui Characters:new
 Gui Characters: +Caption +Border +ToolWindow +AlwaysOnTop +E0x08000000 ; Never Focus, even when clicked on.
+
+MyReload() {
+	Send ^s
+	Sleep 100
+	Reload
+}
+
+;https://www.autohotkey.com/boards/viewtopic.php?t=74127
+LineStr(ByRef S, P, C:="", D:="") {   ;  LineStr v0.9d,   by SKAN on D341/D449 @ tiny.cc/linestr
+	Local L := StrLen(S),   DL := StrLen(D:=(D ? D : Instr(S,"`r`n") ? "`r`n" : "`n") ),   F, P1, P2 
+	Return SubStr(S,(P1:=L?(P!=1&&InStr(S,D,,0))?(F:=InStr(S,D,,P>0,Abs(P-1)))?F+DL:P-1<1?1:0:(F:=1)
+	:0),(P2:=(P1&&C!=0)?C!=""?(F:=InStr(S,D,,(C>0?F+DL:0),Abs(C)))?F-1:C>0?L:1:L:0)>=P1?P2-P1+1:0)
+	}
+	
+TimeWasted() {
+	global timewasted 
+	tw := {NULL: 0}
+	Regexs := ["^EVE|^..:..$","Mozilla Firefox$"]
+
+	for i,r in Regexs {
+		
+		tw[r]:=0
+	}
+
+	for k, v in timewasted {
+		__k := "    "
+		__k .= k
+		;tw[k] := v
+		tw[__k] := v
+		for i,r in Regexs {
+			if (RegExMatch(k,r)) {
+				tw[r] += v
+			}
+		}
+	}
+
+	s := ""
+	for k, v in tw {
+		t := Round(v/1000)
+		if (t=0)
+			continue
+		L := FormatSeconds(t)
+		L .= "	"
+		L .= k
+		L .= "`n"
+		s .= L
+	}
+
+	Sort, s,l, R
+	s20 := LineStr(s,1,20)
+	if (s <> s20) {
+		s20 .= "`n..."
+	}
+	s20 .= "`n`nCopy All?"
+
+	IfWinExist, Time Wasted
+		WinClose
+
+	MsgBox, 4, Time Wasted, %s20%
+	IfMsgBox YES
+		clipboard := s
+	
+}
 
 ShowCharacters() {
 	Gui Characters:Destroy
@@ -127,7 +197,7 @@ WinKey() {
 	;ControlSend, , {LWin}, Program Manager 
 }
 
-MinimizeAll() {
+MinimizeAllAll() {
 	WinMinimizeAll
 }
 
@@ -187,7 +257,7 @@ RoutePlanner() {
 }
 
 
-Tile() {
+Tile1() {
 	global gTile
 	global groupcount
 	global groupid
@@ -209,6 +279,27 @@ Tile() {
 		
 	}
 }
+
+Tile() {
+	global gTile
+	global groupcount
+	global groupid
+	
+	gTile := TRUE
+	DeleteAll()
+	AddAll()
+	h:= Round(A_ScreenHeight*0.5)
+	w:= Round(A_ScreenWidth*0.5)
+	v:=groupid[1]
+	WinMove, ahk_id %v%,,1  ,1  ,%w%,%h%
+	v:=groupid[2]
+	WinMove, ahk_id %v%,,%w%,1  ,%w%,%h%
+	v:=groupid[3]
+	WinMove, ahk_id %v%,,1  ,%h%,%w%,%h%
+	v:=groupid[0]
+	WinMove, ahk_id %v%,,%w%,%h%,%w%,%h%
+}
+
 
 FullScreenX() {
 	global groupselect
@@ -313,7 +404,7 @@ cur_win_x := current_x - win_x ; calculate relative cursor position
 cur_win_y := current_y - win_y
 WinGet, window_minmax, MinMax, ahk_id %window_id%
 
-tips:={"D":"Discord","<":"Switch to previous window",":":"Menu",">":"Switch to next window","Zzz":"Hide window and skip over it 4 times","F":"Drones Engage","CtrlDown":"Hold down Ctrl","U":"EVE University Wiki"}
+tips:={"D":"Discord","<":"Switch to previous window",":":"Menu",">":"Switch to next window","??":"Hide window and skip over it 4 times","F":"Drones Engage","CtrlDown":"Hold down Ctrl","U":"EVE University Wiki"}
 MouseGetPos,,,, VarControl
 tip:=tips[A_GuiControl]
 if (tip) {
@@ -368,12 +459,14 @@ FormatSeconds(NumberOfSeconds)  ; Convert the specified number of seconds to hh:
 
 ManageCloseButton() 
 {
-static timewasted := {"NULL":0}
+global timewasted
+static awaytime:=0
+
 global ActiveWindowID
 global WindowShown
 WinGet, this_id, ID, A
 WinGetTitle, this_title, A
-WinKill,	 ActiveWindowID
+;WinKill,	 ActiveWindowID
 
 idle:=round(A_TimeIdle/1000)
 
@@ -389,6 +482,16 @@ if (time <> lasttime) {
 	Gui Switch:show, NA , %time%
 	lasttime:=time
 }
+
+if (InStr(this_title,"EVE")) {
+	awaytime:=0
+} else {
+	awaytime += 0.5
+	if (awaytime > 200) {
+		WinActivate, ahk_id %this_id% 
+	} 
+}
+
 
 if (idle>5) {
 	WinSet, Top,, MEmu
@@ -533,6 +636,21 @@ Splash("Kill _" . ActiveWindowID . "_")
 WinKill, ahk_id %ActiveWindowID%
 goto switch
 ;return
+
+MinimizeAll(){
+	WinGet,Windows,List
+	Loop,%Windows%
+	{
+		this_id := Windows%A_Index%
+	
+		WinGetTitle,this_title,ahk_id %this_id%
+		if (this_title = "EVE" or InStr(this_title,"EVE - " ) = 1)   
+		{
+			WinMinimize, ahk_id %this_id%
+		}
+	}
+	return
+}
 
 
 AddAll(){
@@ -729,7 +847,13 @@ return
 menu:
 OnMessage( 0x200, "Drag", 1 ) 
 ;Splash("Menu!")
-gui Menu:show
+mtoggle := !mtoggle
+if (mtoggle) {
+	gui Menu:show
+} else { 
+	gui Menu:hide
+}
+
 return
 
 
@@ -784,8 +908,52 @@ G*	Gallente Federation Choice Point
 2	In Progess
 
 
+Amarr VIII - Emperor Family Academy
+Amarr VIII (Oris) - Emperor Family Academy 
 
 __FITS__
+
+[Executioner, LEXI Warp]
+Nanofiber Internal Structure II
+Nanofiber Internal Structure II
+'Halcyon' Core Equalizer I
+
+1MN Monopropellant Enduring Afterburner
+Small Clarity Ward Enduring Shield Booster
+Enduring Multispectrum Shield Hardener
+
+Salvager I
+Responsive Auto-Targeting System I
+Small I-ax Enduring Remote Armor Repairer
+Small Asymmetric Enduring Remote Shield Booster
+
+Small Capacitor Control Circuit I
+Small Low Friction Nozzle Joints I
+Small Capacitor Control Circuit I
+
+
+
+
+
+[Executioner, Loot]
+Nanofiber Internal Structure II
+Nanofiber Internal Structure II
+'Halcyon' Core Equalizer I
+
+1MN Monopropellant Enduring Afterburner
+Small Azeotropic Restrained Shield Extender
+Small Azeotropic Restrained Shield Extender
+
+Salvager I
+Salvager I
+Salvager I
+Salvager I
+
+Small Cargohold Optimization I
+Small Low Friction Nozzle Joints I
+Small Cargohold Optimization I
+
+
 [Venture, EP-S 9000]
 Mining Laser Upgrade II
 
@@ -794,7 +962,7 @@ Medium Shield Extender II
 Enduring Multispectrum Shield Hardener
 
 EP-S Gaussian Scoped Mining Laser
-Miner II
+EP-S Gaussian Scoped Mining Laser
 Festival Launcher
 
 Small EM Shield Reinforcer I
@@ -806,6 +974,40 @@ Small Core Defense Field Extender I
 Hornet I x2
 
 Barium Firework x50
+Medium Azeotropic Restrained Shield Extender x1
+Mining Laser Upgrade I x1
+
+[Executioner, Null Burn Bubble]
+Nanofiber Internal Structure II
+Nanofiber Internal Structure II
+'Halcyon' Core Equalizer I
+
+Small Azeotropic Restrained Shield Extender
+5MN Quad LiF Restrained Microwarpdrive
+Small Azeotropic Restrained Shield Extender
+
+Salvager I
+Salvager I
+Small Tractor Beam II
+Small Tractor Beam I
+
+Small Polycarbon Engine Housing I
+Small Auxiliary Thrusters I
+Small Auxiliary Thrusters I
+
+
+
+
+Microwave S x14
+Scourge Auto-Targeting Light Missile I x5466
+Multifrequency S x7
+Radio S x7
+Eifyr and Co. 'Rogue' Warp Drive Speed WS-605 x1
+Limited Memory Augmentation x1
+Inherent Implants 'Squire' Capacitor Management EM-801 x1
+Eifyr and Co. 'Rogue' Evasive Maneuvering EM-701 x1
+Limited Cybernetic Subprocessor x1
+
 
 
 [Algos, SoE]
@@ -1075,6 +1277,44 @@ Salvage Drone I x3
 Hobgoblin I x5
 
 Expanded Cargohold II x4
+
+[Punisher, 50MN Rocket]
+Micro Auxiliary Power Core II
+Micro Auxiliary Power Core II
+Capacitor Power Relay II
+Capacitor Power Relay II
+Overdrive Injector System II
+
+50MN Y-T8 Compact Microwarpdrive
+Cap Recharger II
+
+
+Small Ancillary Current Router II
+Small Ancillary Current Router I
+Small Auxiliary Thrusters II
+
+
+
+[Punisher, 50MN Rocket T1 ]
+Micro Auxiliary Power Core I
+Mark I Compact Power Diagnostic System
+Type-D Restrained Capacitor Power Relay
+Mark I Compact Power Diagnostic System
+Mark I Compact Power Diagnostic System
+
+50MN Y-T8 Compact Microwarpdrive
+Eutectic Compact Cap Recharger
+
+
+Small Ancillary Current Router I
+Small Ancillary Current Router I
+Small Auxiliary Thrusters I
+
+
+
+
+
+
 
 
 
