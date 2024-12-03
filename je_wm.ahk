@@ -1,4 +1,4 @@
-; https://www.reddit.com/r/Eve/comments/a0i0mm/need_an_ahk_script_to_switch_between_chosen_eve/
+﻿; https://www.reddit.com/r/Eve/comments/a0i0mm/need_an_ahk_script_to_switch_between_chosen_eve/
 #Warn 
 #SingleInstance Force
 #NoEnv
@@ -62,8 +62,8 @@ Gui Switch:Add, Button, gswitchback x0 y0 w68 h64, < ; Switch to Previous Window
 Gui Switch:Add, Button, gswitch x104 y0 w68 h64, > ; Switch to Next Window
 ;Gui Switch:Font
 Gui Switch:Font, s18
-Gui Switch:Add, Button, gmenu  x68 y0  w36 h64, ? ; Menu (fits)
-Gui Switch:Add, Button, gCtrlS x0  y64 w64 h32, ?? ; Sleep (Skip 4 times)
+Gui Switch:Add, Button, gmenu  x68 y0  w36 h64, ⋮ ; Menu (fits)
+Gui Switch:Add, Button, gCtrlS x0  y64 w64 h32, 💤 ; Sleep (Skip 4 times)
 Gui Switch:Add, Button, gOSK   x64 y64 w32 h32, F ; Engage Drones?
 Gui Switch:Add, Button, gEveUni   x96 y64  w32 h32, U ; UniWiki
 Gui Switch:Add, Button, gDiscord   x128 y64  w32 h32, D ; Discord
@@ -75,7 +75,7 @@ Gui Switch:Add, Button, gOSK   x132 y96  w44 h32, F4
 ;Gui Switch:Add, Button, gCtrlUp  x0  y128 w128 h32 c87BBFF, CtrlU
 ;Gui Switch:Add, Button, gCtrlDown  x0  y128 w128 h32  c87BBFF, CtrlD
 Gui, Switch:Add, CheckBox, vCtrlDown gCtrl x0 y128 w64 h32, Ctrl ; Hold down Ctrl
-Gui Switch:Add, Button, gTile   x64 y128  w32 h32, ?? ; Tile Windows Vertically
+Gui Switch:Add, Button, gTile   x64 y128  w32 h32, 🁤 ; Tile Windows Vertically
 Gui Switch:Font, s14
 Gui, Add, Text, cRed x96 y128 w128 vTextTimeWasted gTimeWasted, HH:MM:SS ; Time Spend on this Window Title
 ;^ Click for Summary of Time Wasted e.g.:
@@ -87,9 +87,9 @@ Gui, Add, Text, x96 y146 w128 vWinTitle gCopyWinTitle, WinTitle ; Currently Acti
 Gui Switch:Font, s18
 Gui Switch:Add, Button, gWinKey   x0 y160 w32 h32, # ; Windows Key (Raise TaskBar)
 Gui Switch:Add, Button, gMinimizeAll   x32 y160 w32 h32, M ; Minimise All Windows
-Gui Switch:Add, Button, gRoutePlanner  x64 y160 w32 h32, ?? ; DOTLAN Route Manager
-Gui Switch:Add, Button, gRoutePlanner  x96 y160 w32 h32, ?? ; Yellow Alert
-Gui Switch:Add, Button, gMyReload  x140 y160 w32 h32, ? ; Reload this Script
+Gui Switch:Add, Button, gRoutePlanner  x64 y160 w32 h32, 🚀 ; DOTLAN Route Manager
+Gui Switch:Add, Button, gRoutePlanner  x96 y160 w32 h32, 🔔 ; Yellow Alert
+Gui Switch:Add, Button, gMyReload  x140 y160 w32 h32, ⟳ ; Reload this Script
 Gui Characters:new
 Gui Characters: +Caption +Border +ToolWindow +AlwaysOnTop +E0x08000000 ; Never Focus, even when clicked on.
 
@@ -404,7 +404,7 @@ cur_win_x := current_x - win_x ; calculate relative cursor position
 cur_win_y := current_y - win_y
 WinGet, window_minmax, MinMax, ahk_id %window_id%
 
-tips:={"D":"Discord","<":"Switch to previous window",":":"Menu",">":"Switch to next window","??":"Hide window and skip over it 4 times","F":"Drones Engage","CtrlDown":"Hold down Ctrl","U":"EVE University Wiki"}
+tips:={"D":"Discord","<":"Switch to previous window",":":"Menu",">":"Switch to next window","💤":"Hide window and skip over it 4 times","F":"Drones Engage","CtrlDown":"Hold down Ctrl","U":"EVE University Wiki"}
 MouseGetPos,,,, VarControl
 tip:=tips[A_GuiControl]
 if (tip) {
