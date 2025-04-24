@@ -22,7 +22,6 @@ LastActiveBeforeYellowAlert := 0
 yellow_alerts_enabled := true
 yellow_alert_min_idle := 5  ; Default minimum idle time in seconds
 yellow_alert_delay := 60    ; Default delay in seconds
-yellow_alert_gui_created := false  ; Track if the Yellow Alert GUI has been created
 
 ;					CoordMode Mouse, Screen
 
@@ -79,9 +78,6 @@ Gui Switch:Add, Button, gOSK   x0 y96 w44 h32, F1
 Gui Switch:Add, Button, gOSK   x44 y96 w44 h32, F2
 Gui Switch:Add, Button, gOSK   x88 y96 w44 h32, F3
 Gui Switch:Add, Button, gOSK   x132 y96  w44 h32, F4
-;Gui, Color, Red
-;Gui Switch:Add, Button, gCtrlUp  x0  y128 w128 h32 c87BBFF, CtrlU
-;Gui Switch:Add, Button, gCtrlDown  x0  y128 w128 h32  c87BBFF, CtrlD
 Gui, Switch:Add, CheckBox, vCtrlDown gCtrl x0 y128 w64 h32, Ctrl ; Hold down Ctrl
 Gui Switch:Add, Button, gTile   x64 y128  w32 h32, 🁤 ; Tile Windows Vertically
 Gui Switch:Font, s14
@@ -172,7 +168,6 @@ Gui Characters: +Caption +Border +ToolWindow +AlwaysOnTop +E0x08000000 ; Never F
 	
 	static exists={"NULL":0}
 	SetTitleMatchMode, 1  
-	;WinGet,Windows,List,"EVE - "
 	WinGet,Windows,List
 	Loop,%Windows%
 	{
@@ -186,7 +181,6 @@ Gui Characters: +Caption +Border +ToolWindow +AlwaysOnTop +E0x08000000 ; Never F
 	}
 	
 	Gui Characters:Submit
-	;Gui Characters:Show, h1000 NA, Paste
 	Gui Characters:Show, NA, Paste
 }
 
@@ -203,7 +197,6 @@ Character() {
 WinKey() {
 	WinActivate, Program Manager
 	Send {Ctrl up}{LWin}
-	;ControlSend, , {LWin}, Program Manager 
 }
 
 MinimizeAllAll() {
@@ -214,18 +207,10 @@ CopyWinTitle() {
 	GuiControlGet, clipboard,Switch:,WinTitle
 	ShowCharacters()
 }
-	
 
-;Gui Switch:Font, s12
-;Gui Switch:Add, Button, gOSK   x0 y128 w172 h16, Ctrl Down
-;Gui Switch:Add, Button, gOSK   x0 y144 w172 h16, Ctrl Up
-;Gui Switch:Add, Button, gOSK   x96 y64 w64 h32, +RFFFFFF
 
 Gui Menu:new
 Gui Menu: +ToolWindow +AlwaysOnTop
-;Gui Menu:Add, Button, , Venture
-;Gui Menu:Add, Button, , Travel
-;local _i
 for _i in fits {
 	Gui Menu:Add, Button, gfit, %_i%
 }
@@ -279,7 +264,6 @@ RoutePlanner() {
 	Gui, YellowAlert:Add, Edit, vYellowAlertDelay gYellowAlertUpdateSettings w60, %yellow_alert_delay%
 	Gui, YellowAlert:Add, Button, x10 y+10 w80 gYellowAlertYield, Yield
 	Gui, YellowAlert:Add, Button, x+10 w80 gYellowAlertClose, Close
-	yellow_alert_gui_created := true  ; Mark that the GUI has been created
 
 Gui, YellowAlert:Hide
 
@@ -533,10 +517,6 @@ HideToolTip() {
 	ToolTip
 }
 	
-;menu:
-;(){
-;}
-
 
 Mod() {
 	static down:={0:0}
@@ -555,15 +535,6 @@ Mod() {
 } 
 
 
-NULLF(){
-sleep 2000
-return
-}
-
-
-;Gui, -Caption +Border +ToolWindow +AlwaysOnTop
-;Gui, Show, w200 h13
-;return
 
 WM_MOUSEMOVE( wparam, lparam, msg, hwnd )
 {
@@ -572,62 +543,6 @@ WM_MOUSEMOVE( wparam, lparam, msg, hwnd )
 }
 
 
-;-------------------------------------------------
-; EDITED FROM Window dragging via alt+lbutton                -
-; Author: Lasmori (email AT lasmori D0T com)     -
-;-------------------------------------------------
-Drag(){
-;return
-; Fixed to move background windows properly
-CoordMode, Mouse, Screen
-
-MouseGetPos, , , id ; get ID of window under cursor
-WinGetTitle, ltitle, ahk_id %id% ; get title of window under cursor
-SetTitleMatchMode 3 ; match window that has the exact name as %title%
-WinGetPos, win_x, win_y, , , %ltitle% ; get upper left corner of window
-MouseGetPos, current_x, current_y, window_id ; get cursor position on the screen (not relative to window)
-cur_win_x := current_x - win_x ; calculate relative cursor position
-cur_win_y := current_y - win_y
-WinGet, window_minmax, MinMax, ahk_id %window_id%
-
-tips:={"D":"Discord","<":"Switch to previous window",":":"Menu",">":"Switch to next window","💤":"Hide window and skip over it 4 times","F":"Drones Engage","CtrlDown":"Hold down Ctrl","U":"EVE University Wiki","🔔":"Yellow Alert Configuration"}
-MouseGetPos,,,, VarControl
-tip:=tips[A_GuiControl]
-if (tip) {
-ToolTip % tip
-SetTimer, HideToolTip, -5000
-;} else {
-;	ToolTip % A_GuiControl
-}
-
-dragging:=FALSE
-
-Sleep 20
-
-SetWinDelay, 0
-
-loop
-{
-  ; exit the loop if the left mouse button was released
-  GetKeyState, lbutton_state, LButton, P
-  if lbutton_state = U
-  {
-    break
-  }
-  
-
-  MouseGetPos, cur_x, cur_y
-  window_x := cur_x - cur_win_x
-  window_y := cur_y - cur_win_y
-  if (abs(window_x-win_x)+abs(window_y-win_y)<64)
-	dragging:=TRUE
-  if (dragging)	
-      WinMove, ahk_id %window_id%,, %window_x%, %window_y%
-  Sleep 10
-}
-
-return
-}
 
 ;https://www.autohotkey.com/docs/v1/lib/FormatTime.htm
 FormatSeconds(NumberOfSeconds)  ; Convert the specified number of seconds to hh:mm:ss format.
@@ -677,6 +592,8 @@ if (InStr(foreground_title, "Yellow Alert") == 1) {
 	LastActiveBeforeYellowAlert := foreground_id
 }
 
+
+
 idle:=round(A_TimeIdle/1000)
 
 static lasttime=""
@@ -724,8 +641,6 @@ if (yellow_alerts_enabled && A_TimeIdlePhysical > yellow_alert_min_idle * 1000) 
     }
 }
 
-; Update Yellow Alert button appearance
-UpdateYellowAlertButton()
 
 time:=A_Hour ":" A_Min
 
@@ -734,14 +649,6 @@ if (time <> lasttime) {
 	lasttime:=time
 }
 
-if (InStr(current_title,"EVE")) {
-	awaytime:=0
-} else {
-	awaytime += 0.5
-	if (awaytime > 200) {
-		WinActivate, ahk_id %current_id% 
-	} 
-}
 
 
 if (idle>5) {
@@ -782,21 +689,20 @@ if (current_title = "AltF4") {
 
 	
 	
+;Show ALT-F4 button to close EVE if no character is logged in
+;i.e. if the window title is just "EVE" and not e.g. "EVE - Some Name"
 if (current_title = "EVE") {
 	ActiveWindowID := current_id
 	if (WindowShown=0) {
 		WinGetPos, OutX, OutY, OutWidth, OutHeight, A
 		X:=OutX+OutWidth*3/4
 		Y:=OutY+OutHeight*3/4
-		;Splash(X ":" Y)
-		;Sleep 1000
 		gui, Close:show, x%X% y%Y%, AltF4
 		;Winset, Alwaysontop, , A
 		OnMessage( 0x200, "WM_MOUSEMOVE" ) 
 
-		;sleep 100
+
 		WinActivate, ActiveWindowID
-		;Splash(ActiveWindowID)
 		WindowShown:=1
 	}
 } else {
@@ -816,19 +722,15 @@ Goto AddAll
 
 AddWindow() {
     global groupid
-	;global groupname
 	global groupcount
 	global groupselect
 	
-	; WinGet, active_id, PID, A
 	
 	this_id := "ahk_id " . Windows%A_Index%
 	groupid[groupcount] := this_id
 	WinGetTitle, active_name, A
-	;groupname[groupcount] := active_name
 	test := groupid[groupcount]
 	groupcount += 1
-	;Splash("The active window's ID is " %test% ", " %groupcount% " registered windows8")
 	MsgBox, %s%
 			
 }
@@ -864,8 +766,6 @@ MySplashTextOff()
 }
 
 
-;Ctrl() {
-;  global CtrlDown
 Ctrl:
   Gui, Submit, NoHide
   if (CtrlDown) {
@@ -875,8 +775,6 @@ Ctrl:
   	Splash("Ctrl Up")
 	Send, {Ctrl Up}
   }
-;}
-;	
 
 #3::
 AddWindow()
@@ -886,7 +784,6 @@ buttonAltF4:
 Splash("Kill _" . ActiveWindowID . "_")
 WinKill, ahk_id %ActiveWindowID%
 goto switch
-;return
 
 MinimizeAll(){
 	WinGet,Windows,List
@@ -906,32 +803,23 @@ MinimizeAll(){
 
 AddAll(){
 global groupid
-;global groupname
 global groupcount
 global groupselect
 
 WinGet,Windows,List
-;Sort, Windows
 last_id := ""
 Loop,%Windows%
 {
-	;this_id := "ahk_id " . Windows%A_Index%
 	this_id := Windows%A_Index%
 
 	WinGetTitle,this_title,ahk_id %this_id%
 	if (this_title = "EVE" or InStr(this_title,"EVE - " ) = 1)   
 	{
 	groupid[groupcount] := this_id
-	;groupname[groupcount] := this_title
 	groupcount += 1
 	}
 }
-;WinActivate %last_id%
-
 	Splash("Add"+groupcount)
-	;Sleep, 1000
-	;Sort, groupid -- built in sort does nothing!
-	;So implement simple bubble sort.
 	for i,v in groupid {
 		for j,w in groupid {
 			if (j>0 and w < groupid[j-1]) {
@@ -940,16 +828,13 @@ Loop,%Windows%
 			}
 		}
 	}
-	;	groupid=sortArray(groupid)
 	s:=""
 	for i,v in groupid
     s .= "`n" . v
-	;MsgBox, %s%
 return
 }
 
 OSK:
-	;ControlSend, , {F}, ahk_id groupid[groupselect]
 	Send, {%A_GuiControl%}
 	return
 
@@ -1007,21 +892,10 @@ SwitchForward(direction=1) {
 	global groupid
 	
 	UnTile()
-	;global groupname
-	;sleep 500
-	;WinMinimize, A
 	If (groupcount >= 1)
 	{
         AutoPilot:
 		WinGetTitle, Title, A
-		;MouseGetPos _lastX, _lastY
-		;				if (Title="SwitchBar" or Title = "AltF4" or InStr(Title, "EVE")=1 or InStr(Title, "BlueStacks")=1) {
-			;select := groupid[groupselect]
-			;selectname := groupname[groupselect]
-			;WinMinimize %select%
-			;SplashTextOn,400,20,Switch Window, Selected %select% %selectname%.
-			;Sleep 1000
-			;SplashTextOff
 			groupselect+=direction
 			If (groupselect >= groupcount) {
 				DeleteAll()
@@ -1034,7 +908,6 @@ SwitchForward(direction=1) {
 					groupselect := groupcount-1
 				}
 			}
-;		Splash("i="+groupselect+" "+)
 				
 			if (groupcount=0) {
 				Splash("All windows disappeared")
@@ -1046,10 +919,6 @@ SwitchForward(direction=1) {
 			s := ""
   for i,v in groupid
     s .= "`n" . v
-			;MsgBox, "i=" %groupselect% " -> " %select% %s%
-			;selectname := groupname[groupselect]
-			;WinActivate ahk_id %select%
-			;WinGet, this_id, ID, A
 			this_id := select
 			autopiloting:=dict[this_id]
 			if (autopiloting > 0) {
@@ -1057,9 +926,7 @@ SwitchForward(direction=1) {
 				dict[this_id]--
 				goto AutoPilot
 			}
-			;Splash("Manual " autopiloting selectname this_id)
 			WinActivate ahk_id %select%
-		;}				
 	}
 	else
 	{
@@ -1072,7 +939,6 @@ SwitchForward(direction=1) {
 
 
 ~$tab::	
-;Send, {Tab}
 WinGetTitle, gTitle, A
 if (gTitle="SwitchBar" or gTitle = "AltF4" or InStr(gTitle, "EVE")=1 or InStr(gTitle, "BlueStacks")=1) {
 	SwitchForward(1)
@@ -1082,22 +948,17 @@ return
 switch:
 OnMessage( 0x200, "Drag", 1 ) 
 
-
-;#1::
-;Splash("Switch Forwards")
 SwitchForward(1)
 return
 
 switchback:
 
 OnMessage( 0x200, "Drag", 1 ) 
-;Splash("Switch Back")
 SwitchForward(-1)
 return
 
 menu:
 OnMessage( 0x200, "Drag", 1 ) 
-;Splash("Menu!")
 mtoggle := !mtoggle
 if (mtoggle) {
 	gui Menu:show
