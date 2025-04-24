@@ -277,6 +277,7 @@ RoutePlanner() {
 	Gui, YellowAlert:Add, Edit, vYellowAlertMinIdle gYellowAlertUpdateSettings w60, %yellow_alert_min_idle%
 	Gui, YellowAlert:Add, Text, , Delay (seconds):
 	Gui, YellowAlert:Add, Edit, vYellowAlertDelay gYellowAlertUpdateSettings w60, %yellow_alert_delay%
+	Gui, YellowAlert:Add, Button, gYellowAlertYield, Yield
 	Gui, YellowAlert:Add, Button, gYellowAlertClose, Close
 	yellow_alert_gui_created := true  ; Mark that the GUI has been created
 
@@ -1575,3 +1576,17 @@ Small Auxiliary Thrusters I
 __END FITS__
 
 */
+
+YellowAlertYield() {
+    global yellow_alert_ids
+    
+    ; Loop through all yellow alert windows and minimize them
+    for i, id in yellow_alert_ids {
+        if (WinExist("ahk_id " . id)) {
+            WinMinimize, ahk_id %id%
+        }
+    }
+    
+    Splash("Minimized all Yellow Alert windows")
+    return
+}
