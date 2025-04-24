@@ -277,8 +277,8 @@ RoutePlanner() {
 	Gui, YellowAlert:Add, Edit, vYellowAlertMinIdle gYellowAlertUpdateSettings w60, %yellow_alert_min_idle%
 	Gui, YellowAlert:Add, Text, , Delay (seconds):
 	Gui, YellowAlert:Add, Edit, vYellowAlertDelay gYellowAlertUpdateSettings w60, %yellow_alert_delay%
-	Gui, YellowAlert:Add, Button, gYellowAlertYield, Yield
-	Gui, YellowAlert:Add, Button, gYellowAlertClose, Close
+	Gui, YellowAlert:Add, Button, x10 y+10 w80 gYellowAlertYield, Yield
+	Gui, YellowAlert:Add, Button, x+10 w80 gYellowAlertClose, Close
 	yellow_alert_gui_created := true  ; Mark that the GUI has been created
 
 Gui, YellowAlert:Hide
