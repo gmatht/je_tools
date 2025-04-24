@@ -561,7 +561,7 @@ FormatSeconds(NumberOfSeconds)  ; Convert the specified number of seconds to hh:
 EventLoop() 
 {
 global timewasted
-static awaytime:=0
+static YellowAlert_TickCount:=0
 static last_Min:=-1
 
 global ActiveWindowID
@@ -592,7 +592,12 @@ if (InStr(foreground_title, "Yellow Alert") == 1) {
 	LastActiveBeforeYellowAlert := foreground_id
 }
 
-
+for i, id in yellow_alert_ids {
+	if (id == LastActiveBeforeYellowAlert) {
+		YellowAlert_TickCount := A_TickCount
+		break
+	}
+}
 
 idle:=round(A_TimeIdle/1000)
 
@@ -619,14 +624,14 @@ if WinExist("Yellow Alert") {
 }
 
 ; Check if we need to raise Yellow Alert windows
-if (yellow_alerts_enabled && A_TimeIdlePhysical > yellow_alert_min_idle * 1000) {
+if (yellow_alerts_enabled && idle >= yellow_alert_min_idle) {
     ; Get current time for delay check
     current_time := A_TickCount // 1000
     
     ; If there are any windows in yellow alert and either:
     ; 1. It's a different minute and minimum idle time exceeded, or
     ; 2. Delay seconds have passed since last alert and user is still idle
-    if (yellow_alert_ids.Length() > 0 &&         (         (current_time - last_alert_time > yellow_alert_delay))) {
+    if (yellow_alert_ids.Length() > 0 && ((A_TickCount - YellowAlert_TickCount > yellow_alert_delay * 1000))) {
         
         last_alert_time := current_time
         
