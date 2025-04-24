@@ -22,6 +22,7 @@ LastActiveBeforeYellowAlert := 0
 yellow_alerts_enabled := true
 yellow_alert_min_idle := 5  ; Default minimum idle time in seconds
 yellow_alert_delay := 60    ; Default delay in seconds
+yellow_alert_gui_created := false  ; Track if the Yellow Alert GUI has been created
 
 ;					CoordMode Mouse, Screen
 
@@ -270,18 +271,18 @@ RoutePlanner() {
 	Gui, YellowAlert:Font, s12
 	Gui, YellowAlert:Add, Text, , Yellow Alert Configuration
 	Gui, YellowAlert:Add, CheckBox, vYellowAlertCurrentWindow gYellowAlertToggleCurrent, Add current window
-	;Gui, YellowAlert:Add, CheckBox, vYellowAlertCurrentWindow gYellowAlertToggleCurrent Checked%isYellowAlert%, Add current window
 	Gui, YellowAlert:Add, Text, vYellowAlertWindowName, Current window
-	;Gui, YellowAlert:Add, Text, vYellowAlertWindowName, Current: %this_title%
 	Gui, YellowAlert:Add, CheckBox, vYellowAlertsEnabled gYellowAlertToggleEnabled Checked%yellow_alerts_enabled%, Alerts Enabled
 	Gui, YellowAlert:Add, Text, , Minimum Idle (seconds):
 	Gui, YellowAlert:Add, Edit, vYellowAlertMinIdle gYellowAlertUpdateSettings w60, %yellow_alert_min_idle%
 	Gui, YellowAlert:Add, Text, , Delay (seconds):
 	Gui, YellowAlert:Add, Edit, vYellowAlertDelay gYellowAlertUpdateSettings w60, %yellow_alert_delay%
 	Gui, YellowAlert:Add, Button, gYellowAlertClose, Close
+	yellow_alert_gui_created := true  ; Mark that the GUI has been created
 
+Gui, YellowAlert:Hide
 
-	Gui, YellowAlert:Show, , Yellow Alert
+	;Gui, YellowAlert:Show, , Yellow Alert
 
 	; No longer need this timer as EventLoop handles it
 	; SetTimer, YellowAlertUpdateCurrentWindow, 200
@@ -290,45 +291,41 @@ RoutePlanner() {
 ;Toggle if ship is under yellow alert, i.e. if groupid is in yellow_alert_ids
 
 YellowAlert() {
-	global yellow_alert_ids
-	global groupid
-	global ActiveWindowID
-	global yellow_alerts_enabled
-	global yellow_alert_min_idle
-	global yellow_alert_delay
-	global YellowAlertCurrentWindow
 	
-	WinGet, this_id, ID, A
-	WinGetTitle, this_title, A
 	
-	; Check if the current window is already in yellow alert
-	isYellowAlert := False
-	for i, id in yellow_alert_ids {
-		if (id = this_id) {
-			isYellowAlert := True
-			break
-		}
+	static showing:=0
+	
+	; Check if Yellow Alert GUI is currently showing
+	;f (WinExist("Yellow Alert")) {
+	if (showing) {
+		; Hide the GUI instead of destroying it
+		Gui, YellowAlert:Hide
+		showing := 0
+	} else {
+		; Show the GUI
+		Gui, YellowAlert:Show, , Yellow Alert
+		showing := 1
 	}
 	
-	; Show the Yellow Alert configuration GUI
-	Gui, YellowAlert:Show, , Yellow Alert
 	return
 }
 
-; This function is no longer needed as EventLoop handles the updates
+YellowAlertClose() {
+	; Hide the GUI instead of destroying it
+	;Gui, YellowAlert:Hide
+	YellowAlert()
+	return
+}
 
 YellowAlertToggleCurrent() {
 	global YellowAlertCurrentWindow
 	global yellow_alert_ids
-	global LastActiveBeforeYellowAlert
 	global LastActiveBeforeYellowAlert
 	
 	; Get the current foreground window and its title
 	WinGet, foreground_id, ID, A
 	WinGetTitle, foreground_title, A
 	
-	
-
 	; Determine which window to toggle - if Yellow Alert is foreground, use LastActiveBeforeYellowAlert
 	toggle_id := foreground_id
 	
@@ -409,12 +406,6 @@ YellowAlertUpdateSettings() {
 	}
 }
 
-YellowAlertClose() {
-	; No longer need to stop the timer as we're not using it anymore
-	; SetTimer, YellowAlertUpdateCurrentWindow, Off
-	Gui, YellowAlert:Destroy
-	return
-}
 
 UpdateYellowAlertButton() {
 	global yellow_alert_ids
@@ -689,14 +680,12 @@ idle:=round(A_TimeIdle/1000)
 
 static lasttime=""
 
-; Check if Yellow Alert window is open
+; Check if Yellow Alert window exists (not necessarily visible)
 if WinExist("Yellow Alert") {
     ; Check if current window is in yellow alert list
     x:=False
-    ;isYellowAlert := False
     for i, id in yellow_alert_ids {
         if (id = current_id) {
-            ;isYellowAlert := True
             x := True
             break
         }
