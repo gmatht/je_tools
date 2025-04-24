@@ -10,11 +10,18 @@ groupid := []
 ;groupname := []
 ;groupw := []
 ;grouph := []
+yellow_alert_ids := []
 groupcount = 0
 groupselect = 0
 gtile := FALSE
 dict := {"0x0000":0}
 timewasted := {"NULL":0}
+LastActiveBeforeYellowAlert := 0
+
+; Yellow Alert Configuration
+yellow_alerts_enabled := true
+yellow_alert_min_idle := 5  ; Default minimum idle time in seconds
+yellow_alert_delay := 60    ; Default delay in seconds
 
 ;					CoordMode Mouse, Screen
 
@@ -88,10 +95,11 @@ Gui Switch:Font, s18
 Gui Switch:Add, Button, gWinKey   x0 y160 w32 h32, # ; Windows Key (Raise TaskBar)
 Gui Switch:Add, Button, gMinimizeAll   x32 y160 w32 h32, M ; Minimise All Windows
 Gui Switch:Add, Button, gRoutePlanner  x64 y160 w32 h32, 🚀 ; DOTLAN Route Manager
-Gui Switch:Add, Button, gRoutePlanner  x96 y160 w32 h32, 🔔 ; Yellow Alert
+Gui Switch:Add, Button, gYellowAlert  x96 y160 w32 h32, 🔔 ; Yellow Alert Config
 Gui Switch:Add, Button, gMyReload  x140 y160 w32 h32, ⟳ ; Reload this Script
 Gui Characters:new
 Gui Characters: +Caption +Border +ToolWindow +AlwaysOnTop +E0x08000000 ; Never Focus, even when clicked on.
+
 
 MyReload() {
 	Send ^s
@@ -256,6 +264,192 @@ RoutePlanner() {
 	}
 }
 
+	; Create and show Yellow Alert configuration GUI
+	Gui, YellowAlert:New
+	Gui, YellowAlert:+AlwaysOnTop +ToolWindow
+	Gui, YellowAlert:Font, s12
+	Gui, YellowAlert:Add, Text, , Yellow Alert Configuration
+	Gui, YellowAlert:Add, CheckBox, vYellowAlertCurrentWindow gYellowAlertToggleCurrent, Add current window
+	;Gui, YellowAlert:Add, CheckBox, vYellowAlertCurrentWindow gYellowAlertToggleCurrent Checked%isYellowAlert%, Add current window
+	Gui, YellowAlert:Add, Text, vYellowAlertWindowName, Current window
+	;Gui, YellowAlert:Add, Text, vYellowAlertWindowName, Current: %this_title%
+	Gui, YellowAlert:Add, CheckBox, vYellowAlertsEnabled gYellowAlertToggleEnabled Checked%yellow_alerts_enabled%, Alerts Enabled
+	Gui, YellowAlert:Add, Text, , Minimum Idle (seconds):
+	Gui, YellowAlert:Add, Edit, vYellowAlertMinIdle gYellowAlertUpdateSettings w60, %yellow_alert_min_idle%
+	Gui, YellowAlert:Add, Text, , Delay (seconds):
+	Gui, YellowAlert:Add, Edit, vYellowAlertDelay gYellowAlertUpdateSettings w60, %yellow_alert_delay%
+	Gui, YellowAlert:Add, Button, gYellowAlertClose, Close
+
+
+	Gui, YellowAlert:Show, , Yellow Alert
+
+	; No longer need this timer as EventLoop handles it
+	; SetTimer, YellowAlertUpdateCurrentWindow, 200
+
+
+;Toggle if ship is under yellow alert, i.e. if groupid is in yellow_alert_ids
+
+YellowAlert() {
+	global yellow_alert_ids
+	global groupid
+	global ActiveWindowID
+	global yellow_alerts_enabled
+	global yellow_alert_min_idle
+	global yellow_alert_delay
+	global YellowAlertCurrentWindow
+	
+	WinGet, this_id, ID, A
+	WinGetTitle, this_title, A
+	
+	; Check if the current window is already in yellow alert
+	isYellowAlert := False
+	for i, id in yellow_alert_ids {
+		if (id = this_id) {
+			isYellowAlert := True
+			break
+		}
+	}
+	
+	; Show the Yellow Alert configuration GUI
+	Gui, YellowAlert:Show, , Yellow Alert
+	return
+}
+
+; This function is no longer needed as EventLoop handles the updates
+
+YellowAlertToggleCurrent() {
+	global YellowAlertCurrentWindow
+	global yellow_alert_ids
+	global LastActiveBeforeYellowAlert
+	global LastActiveBeforeYellowAlert
+	
+	; Get the current foreground window and its title
+	WinGet, foreground_id, ID, A
+	WinGetTitle, foreground_title, A
+	
+	
+
+	; Determine which window to toggle - if Yellow Alert is foreground, use LastActiveBeforeYellowAlert
+	toggle_id := foreground_id
+	
+	if (InStr(foreground_title, "Yellow Alert") == 1) {
+		if (LastActiveBeforeYellowAlert && LastActiveBeforeYellowAlert != foreground_id) {
+			toggle_id := LastActiveBeforeYellowAlert
+		}
+	} else {
+		LastActiveBeforeYellowAlert := foreground_id
+	}
+	
+	; Get window title for messages
+	WinGetTitle, toggle_title, ahk_id %toggle_id%
+	
+	; Get the checkbox state
+	Gui, YellowAlert:Submit, NoHide
+	
+	; Check if the window is already in yellow alert
+	isYellowAlert := False
+	for i, id in yellow_alert_ids {
+		if (id = toggle_id) {
+			isYellowAlert := True
+			break
+		}
+	}
+	
+	; If checkbox state doesn't match current state, toggle it
+	if (YellowAlertCurrentWindow && !isYellowAlert) {
+		; Add to yellow alert
+		yellow_alert_ids.Push(toggle_id)
+		Splash("Yellow Alert Added: " . toggle_title)
+	} else if (!YellowAlertCurrentWindow && isYellowAlert) {
+		; Remove from yellow alert
+		newYellowAlerts := []
+		for i, id in yellow_alert_ids {
+			if (id != toggle_id) {
+				newYellowAlerts.Push(id)
+			}
+		}
+		yellow_alert_ids := newYellowAlerts
+		Splash("Yellow Alert Removed: " . toggle_title)
+	}
+}
+
+YellowAlertToggleEnabled() {
+	global yellow_alerts_enabled
+	global YellowAlertsEnabled
+	
+	; Update enabled state immediately
+	Gui, YellowAlert:Submit, NoHide
+	yellow_alerts_enabled := YellowAlertsEnabled
+	
+	if (yellow_alerts_enabled) {
+		Splash("Yellow Alerts Enabled")
+	} else {
+		Splash("Yellow Alerts Disabled")
+	}
+}
+
+YellowAlertUpdateSettings() {
+	global yellow_alert_min_idle
+	global YellowAlertMinIdle
+	global YellowAlertDelay
+	global yellow_alert_delay
+	
+	; Update settings immediately
+	Gui, YellowAlert:Submit, NoHide
+	
+	; Apply changes if values are valid numbers
+	if YellowAlertMinIdle is integer
+	{
+		yellow_alert_min_idle := YellowAlertMinIdle
+	}
+	
+	if YellowAlertDelay is integer
+	{
+		yellow_alert_delay := YellowAlertDelay
+	}
+}
+
+YellowAlertClose() {
+	; No longer need to stop the timer as we're not using it anymore
+	; SetTimer, YellowAlertUpdateCurrentWindow, Off
+	Gui, YellowAlert:Destroy
+	return
+}
+
+UpdateYellowAlertButton() {
+	global yellow_alert_ids
+	global ActiveWindowID
+	global yellow_alerts_enabled
+	
+	isYellowAlert := False
+	WinGet, this_id, ID, A
+	
+	; Check if the current window is in yellow alert
+	if (this_id) {
+		for i, id in yellow_alert_ids {
+			if (id = this_id) {
+				isYellowAlert := True
+				break
+			}
+		}
+	}
+	
+	; Update button appearance based on state
+	if (yellow_alerts_enabled && yellow_alert_ids.Length() > 0) {
+		if (isYellowAlert) {
+			; Current window is in alert - show bright yellow
+			GuiControl, Switch:+Background#FFFF00, 🔔
+		} else {
+			; Some windows in alert but not current - show pale yellow
+			GuiControl, Switch:+Background#FFFFCC, 🔔
+		}
+	} else {
+		; No alerts or alerts disabled - show normal button
+		GuiControl, Switch:+Background#EEEEEE, 🔔
+	}
+}
+
+
 
 Tile1() {
 	global gTile
@@ -404,7 +598,7 @@ cur_win_x := current_x - win_x ; calculate relative cursor position
 cur_win_y := current_y - win_y
 WinGet, window_minmax, MinMax, ahk_id %window_id%
 
-tips:={"D":"Discord","<":"Switch to previous window",":":"Menu",">":"Switch to next window","💤":"Hide window and skip over it 4 times","F":"Drones Engage","CtrlDown":"Hold down Ctrl","U":"EVE University Wiki"}
+tips:={"D":"Discord","<":"Switch to previous window",":":"Menu",">":"Switch to next window","💤":"Hide window and skip over it 4 times","F":"Drones Engage","CtrlDown":"Hold down Ctrl","U":"EVE University Wiki","🔔":"Yellow Alert Configuration"}
 MouseGetPos,,,, VarControl
 tip:=tips[A_GuiControl]
 if (tip) {
@@ -457,24 +651,91 @@ FormatSeconds(NumberOfSeconds)  ; Convert the specified number of seconds to hh:
     */
 }
 
-ManageCloseButton() 
+EventLoop() 
 {
 global timewasted
 static awaytime:=0
+static last_Min:=-1
 
 global ActiveWindowID
 global WindowShown
-WinGet, this_id, ID, A
-WinGetTitle, this_title, A
-;WinKill,	 ActiveWindowID
+global yellow_alert_ids
+global yellow_alerts_enabled
+global yellow_alert_min_idle
+global yellow_alert_delay
+global YellowAlertCurrentWindow
+global LastActiveBeforeYellowAlert
+static last_alert_time := 0
+
+; Get the current foreground window
+WinGet, foreground_id, ID, A
+WinGetTitle, foreground_title, A
+
+; Determine which window ID to use as "current" for Yellow Alert purposes
+WinGetTitle, current_title, ahk_id %foreground_id%
+current_id := foreground_id
+
+; If Yellow Alert is the foreground window, use the LastActiveBeforeYellowAlert instead
+if (InStr(foreground_title, "Yellow Alert") == 1) {
+    ;if (LastActiveBeforeYellowAlert && LastActiveBeforeYellowAlert != foreground_id) {
+        current_id := LastActiveBeforeYellowAlert
+        WinGetTitle, current_title, ahk_id %current_id%
+    ;}
+} else {
+	LastActiveBeforeYellowAlert := foreground_id
+}
 
 idle:=round(A_TimeIdle/1000)
 
-;GuiControl, Text, TextTimeWasted, XXX
-;TextTimeWasted := "YYY"
-;Gui, Switch:Submit, NoHide
-
 static lasttime=""
+
+; Check if Yellow Alert window is open
+if WinExist("Yellow Alert") {
+    ; Check if current window is in yellow alert list
+    x:=False
+    ;isYellowAlert := False
+    for i, id in yellow_alert_ids {
+        if (id = current_id) {
+            ;isYellowAlert := True
+            x := True
+            break
+        }
+    }
+    
+    isYellowAlert:=x
+
+    ; Update the checkbox without triggering its g-label
+    GuiControl, YellowAlert:, YellowAlertCurrentWindow, %isYellowAlert%
+    
+    ; Update window title display
+    GuiControl, YellowAlert:, YellowAlertWindowName, Current: %current_title% (ID: %current_id%)
+}
+
+; Check if we need to raise Yellow Alert windows
+if (yellow_alerts_enabled && A_TimeIdlePhysical > yellow_alert_min_idle * 1000) {
+    ; Get current time for delay check
+    current_time := A_TickCount // 1000
+    
+    ; If there are any windows in yellow alert and either:
+    ; 1. It's a different minute and minimum idle time exceeded, or
+    ; 2. Delay seconds have passed since last alert and user is still idle
+    if (yellow_alert_ids.Length() > 0 &&         (         (current_time - last_alert_time > yellow_alert_delay))) {
+        
+        last_alert_time := current_time
+        
+        ; Loop through all yellow alert windows and bring them to the front
+        for i, id in yellow_alert_ids {
+            WinGetTitle, alert_title, ahk_id %id%
+            if (WinExist("ahk_id " . id)) {
+                WinActivate, ahk_id %id%
+                Splash("Yellow Alert: " . alert_title)
+            }
+        }
+    }
+}
+
+; Update Yellow Alert button appearance
+UpdateYellowAlertButton()
 
 time:=A_Hour ":" A_Min
 
@@ -483,12 +744,12 @@ if (time <> lasttime) {
 	lasttime:=time
 }
 
-if (InStr(this_title,"EVE")) {
+if (InStr(current_title,"EVE")) {
 	awaytime:=0
 } else {
 	awaytime += 0.5
 	if (awaytime > 200) {
-		WinActivate, ahk_id %this_id% 
+		WinActivate, ahk_id %current_id% 
 	} 
 }
 
@@ -501,16 +762,16 @@ if (idle>5) {
 }
 
 
-if (!timewasted[this_title]) 
-	timewasted[this_title] := 0
-timewasted[this_title] += 500 
+if (!timewasted[current_title]) 
+	timewasted[current_title] := 0
+timewasted[current_title] += 500 
 
-tw := Round(timewasted[this_title]/1000)
+tw := Round(timewasted[current_title]/1000)
 
 
 HHMMSS := FormatSeconds(tw)
 
-short_title := RegExReplace(this_title, "^EVE - " , "")
+short_title := RegExReplace(current_title, "^EVE - " , "")
 
 GuiControl, Switch:Text, TextTimeWasted, %HHMMSS%
 GuiControl, Switch:Text, WinTitle, %short_title%
@@ -521,18 +782,18 @@ GuiControl, Switch:Text, WinTitle, %short_title%
 ;%tw%%tw%
 
 ; if (this_title = "QuickSwitch4.ahk") {
-if (this_title = "SwitchBar") {
+if (current_title = "SwitchBar") {
 	return
 }
-if (this_title = "AltF4") {
+if (current_title = "AltF4") {
 	return
 }
 
 
 	
 	
-if (this_title = "EVE") {
-	ActiveWindowID := this_id
+if (current_title = "EVE") {
+	ActiveWindowID := current_id
 	if (WindowShown=0) {
 		WinGetPos, OutX, OutY, OutWidth, OutHeight, A
 		X:=OutX+OutWidth*3/4
@@ -559,7 +820,7 @@ if (this_title = "EVE") {
 return
 }
 
-SetTimer, ManageCloseButton, 500
+SetTimer, EventLoop, 500
 
 Goto AddAll
 
@@ -886,6 +1147,10 @@ return
 fit:
 A_Clipboard := fits[A_GuiControl]
 return
+
+;Doesn't work...
+GuiClose:
+exitapp
 
 /*
 
