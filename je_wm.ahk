@@ -458,17 +458,21 @@ Tile() {
 	gTile := TRUE
 	DeleteAll()
 	AddAll()
-	h:= Round(A_ScreenHeight*0.5)
+	h:= A_ScreenHeight
 	w:= Round(A_ScreenWidth*0.5)
-	v:=groupid[1]
-	WinMove, ahk_id %v%,,1  ,1  ,%w%,%h%
-	v:=groupid[2]
-	WinMove, ahk_id %v%,,%w%,1  ,%w%,%h%
-	v:=groupid[3]
-	WinMove, ahk_id %v%,,1  ,%h%,%w%,%h%
+	if (groupid.Length() > 2) {
+		h:= Round(A_ScreenHeight*0.5)
+		v:=groupid[2]
+		WinMove, ahk_id %v%,,1  ,%h%,%w%,%h%
+		v:=groupid[3]
+		WinMove, ahk_id %v%,,%w%,%h%,%w%,%h%
+	}
 	v:=groupid[0]
-	WinMove, ahk_id %v%,,%w%,%h%,%w%,%h%
+	WinMove, ahk_id %v%,,1  ,1  ,%w%,%h%
+	v:=groupid[1]
+	WinMove, ahk_id %v%,,%w%,1  ,%w%,%h%
 }
+	
 
 
 FullScreenX() {
