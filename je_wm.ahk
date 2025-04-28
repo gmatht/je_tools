@@ -261,7 +261,8 @@ RoutePlanner() {
 	Gui, YellowAlert:Add, Text, , Minimum Idle (seconds):
 	Gui, YellowAlert:Add, Edit, vYellowAlertMinIdle gYellowAlertUpdateSettings w60, %yellow_alert_min_idle%
 	Gui, YellowAlert:Add, Text, , Delay (seconds):
-	Gui, YellowAlert:Add, Edit, vYellowAlertDelay gYellowAlertUpdateSettings w60, %yellow_alert_delay%
+	Gui, YellowAlert:Add, Edit, x10 y+10 vYellowAlertDelay gYellowAlertUpdateSettings w60, %yellow_alert_delay%
+	Gui, YellowAlert:Add, Text, x+10 w80 vYellowAlertCountdown, 0
 	Gui, YellowAlert:Add, Button, x10 y+10 w80 gYellowAlertYield, Yield
 	Gui, YellowAlert:Add, Button, x+10 w80 gYellowAlertClose, Close
 
@@ -588,10 +589,8 @@ current_id := foreground_id
 
 ; If Yellow Alert is the foreground window, use the LastActiveBeforeYellowAlert instead
 if (InStr(foreground_title, "Yellow Alert") == 1) {
-    ;if (LastActiveBeforeYellowAlert && LastActiveBeforeYellowAlert != foreground_id) {
-        current_id := LastActiveBeforeYellowAlert
-        WinGetTitle, current_title, ahk_id %current_id%
-    ;}
+    current_id := LastActiveBeforeYellowAlert
+    WinGetTitle, current_title, ahk_id %current_id%
 } else {
 	LastActiveBeforeYellowAlert := foreground_id
 }
@@ -606,6 +605,26 @@ for i, id in yellow_alert_ids {
 idle:=round(A_TimeIdle/1000)
 
 static lasttime=""
+
+; Calculate countdown until next Yellow Alert
+countdown := 0
+if (yellow_alerts_enabled && yellow_alert_ids.Length() > 0) {
+    time_since_last_alert := (A_TickCount - YellowAlert_TickCount) / 1000
+    ;if (idle >= yellow_alert_min_idle) {
+        countdown := yellow_alert_delay - time_since_last_alert
+        if (countdown < 0) {
+            countdown := 0
+    	}
+    ;} else {
+	if (idle < yellow_alert_min_idle) {	
+        countdown := max(countdown, yellow_alert_min_idle - idle)
+    }
+}
+
+; Update the countdown text in the Yellow Alert GUI
+if WinExist("Yellow Alert") {
+    GuiControl, YellowAlert:, YellowAlertCountdown, %countdown%
+}
 
 ; Check if Yellow Alert window exists (not necessarily visible)
 if WinExist("Yellow Alert") {
