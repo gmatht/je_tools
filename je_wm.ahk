@@ -30,8 +30,8 @@ fits:={"NULL":0}
 InitFits() {
 	global fits
 	FileRead, V, %A_ScriptFullPath%
-	V := RegExReplace(V, "ms).*^__FITS__$" , "")
-	V := RegExReplace(V, "ms)^__END FITS__$.*" , "") 
+	V := RegExReplace(V, "ms).*__FITS__" , "")
+	V := RegExReplace(V, "ms)__END FITS__.*" , "") 
 
 	q:=0
 	r:=1
@@ -1001,6 +1001,21 @@ sortArray(arr,options="") {	; specify only "Flip" in the options to reverse othe
 
 }
 
+
+YellowAlertYield() {
+    global yellow_alert_ids
+    
+    ; Loop through all yellow alert windows and minimize them
+    for i, id in yellow_alert_ids {
+        if (WinExist("ahk_id " . id)) {
+            WinMinimize, ahk_id %id%
+        }
+    }
+    
+    Splash("Minimized all Yellow Alert windows")
+    return
+}
+
 Test:
 WinMove, A, , 100, 100, 1000, 1000
 return
@@ -1447,16 +1462,3 @@ __END FITS__
 
 */
 
-YellowAlertYield() {
-    global yellow_alert_ids
-    
-    ; Loop through all yellow alert windows and minimize them
-    for i, id in yellow_alert_ids {
-        if (WinExist("ahk_id " . id)) {
-            WinMinimize, ahk_id %id%
-        }
-    }
-    
-    Splash("Minimized all Yellow Alert windows")
-    return
-}
