@@ -97,6 +97,13 @@ Gui Switch:Add, Button, gMyReload  x140 y160 w32 h32, ⟳ ; Reload this Script
 Gui Characters:new
 Gui Characters: +Caption +Border +ToolWindow +AlwaysOnTop +E0x08000000 ; Never Focus, even when clicked on.
 
+; Create floating Yield button for Yellow Alert
+Gui, YieldButton:New
+Gui, YieldButton: -Caption +Border +ToolWindow +AlwaysOnTop
+Gui, YieldButton:Font, s14
+Gui, YieldButton:Add, Button, gYellowAlertYield w100 h40, Yield
+Gui, YieldButton:Hide
+
 
 MyReload() {
 	Send ^s
@@ -459,10 +466,29 @@ Tile() {
 	gTile := TRUE
 	DeleteAll()
 	AddAll()
-	h:= A_ScreenHeight
-	w:= Round(A_ScreenWidth*0.5)
+
+
+    ; Get taskbar position and dimensions
+	; Loosely based on https://stackoverflow.com/questions/956224/get-available-screen-area-in-autohotkey
+    WinGetPos, TX, TY, TW, TH, ahk_class Shell_TrayWnd,,,
+   
+    ; Calculate available screen space
+    if (TW = A_ScreenWidth) { ; Vertical taskbar (top or bottom)
+      ScreenWidth := A_ScreenWidth
+      ScreenHeight := A_ScreenHeight - TH
+      ScreenLeft := 0
+      ScreenTop := (TY = 0) ? TH : 0 ; If taskbar at top, adjust top position
+    } else { ; Horizontal taskbar (left or right)
+      ScreenWidth := A_ScreenWidth - TW
+      ScreenHeight := A_ScreenHeight
+      ScreenLeft := (TX = 0) ? TW : 0 ; If taskbar at left, adjust left position
+      ScreenTop := 0
+    }
+  
+	h:= ScreenHeight
+	w:= Round(ScreenWidth*0.5)
 	if (groupid.Length() > 2) {
-		h:= Round(A_ScreenHeight*0.5)
+		h:= Round(ScreenHeight*0.5)
 		v:=groupid[2]
 		WinMove, ahk_id %v%,,1  ,%h%,%w%,%h%
 		v:=groupid[3]
@@ -578,6 +604,7 @@ global yellow_alert_delay
 global YellowAlertCurrentWindow
 global LastActiveBeforeYellowAlert
 static last_alert_time := 0
+static yield_button_visible := false
 
 ; Get the current foreground window
 WinGet, foreground_id, ID, A
@@ -666,6 +693,15 @@ if (yellow_alerts_enabled && idle >= yellow_alert_min_idle) {
                 Splash("Yellow Alert: " . alert_title)
             }
         }
+        
+        ; Show the floating Yield button if not already visible
+        ;if (!yield_button_visible) {
+            ; Position the Yield button in the center of the screen
+            yield_x := A_ScreenWidth / 2 - 50
+            yield_y := A_ScreenHeight / 2 - 20
+            Gui, YieldButton:Show, x%yield_x% y%yield_y% NoActivate
+            yield_button_visible := true
+        ;}
     }
 }
 
@@ -870,21 +906,50 @@ OSK:
 ~^S::
 	AutoPilot()
 	return
+
+~^Q::
+	UnDock()
+	return
 	
 CtrlS:
 	AutoPilot()
 	SwitchForward()
 	return
-	
+
+UnDock() {
+	global yellow_alert_ids
+	global groupcount
+
+	WinGet, this_id, ID, A
+	WinGetTitle, lTitle, ahk_id %this_id%
+	if (InStr(lTitle, "EVE")=1) {
+		; If there is only one Yellow Alert window, we can yield while autopiloting.
+		if (yellow_alert_ids.Length() == 1) {
+			YellowAlertYield()
+			; TODO: temporarilty set delay to about 10 seconds.
+		}
+	}
+}
+
 	
 
 
 AutoPilot() {
 	global dict
+	global yellow_alert_ids
+	global groupcount
+
 	WinGet, this_id, ID, A
 	WinGetTitle, lTitle, ahk_id %this_id%
 	if (InStr(lTitle, "EVE")=1) {
-		dict[this_id]:=4
+		; if there are more than two EVE windows skip the window that is autopiloting 4 times
+		if (groupcount > 2) {
+			dict[this_id]:=4
+		}
+		; If there is only one Yellow Alert window, we can yield while autopiloting.
+		if (yellow_alert_ids.Length() == 1) {
+			YellowAlertYield()
+		}
 	}
 	;d := dict[this_id]
 	;Splash("AP" this_id "is" d "::" lTitle)
@@ -1030,6 +1095,11 @@ YellowAlertYield() {
             WinMinimize, ahk_id %id%
         }
     }
+
+	;if (yield_button_visible) {
+            Gui, YieldButton:Hide
+			yield_button_visible := false
+    ;}
     
     Splash("Minimized all Yellow Alert windows")
     return
