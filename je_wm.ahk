@@ -20,10 +20,12 @@ LastActiveBeforeYellowAlert := 0
 
 ; Yellow Alert Configuration
 yellow_alerts_enabled := true
-yellow_alert_min_idle := 5  ; Default minimum idle time in seconds
+yellow_alert_min_idle := 1  ; Default minimum idle time in seconds
 yellow_alert_delay := 60    ; Default delay in seconds
 
 ;					CoordMode Mouse, Screen
+
+
 
 fits:={"NULL":0}
 
@@ -99,9 +101,17 @@ Gui Characters: +Caption +Border +ToolWindow +AlwaysOnTop +E0x08000000 ; Never F
 
 ; Create floating Yield button for Yellow Alert
 Gui, YieldButton:New
-Gui, YieldButton: -Caption +Border +ToolWindow +AlwaysOnTop
+Gui, YieldButton: +Caption +Border +ToolWindow +AlwaysOnTop
 Gui, YieldButton:Font, s14
-Gui, YieldButton:Add, Button, gYellowAlertYield w100 h40, Yield
+; Add a title for the Yield buttons (optional, since we have a caption now)
+;Gui, YieldButton:Add, Text, cBlack Center, Yield ; Title for the Yield buttons
+; Add buttons for different yield durations
+Gui, YieldButton:Add, Button, gYield10s w60, 10s
+Gui, YieldButton:Add, Button, gYield30s w60, 30s
+Gui, YieldButton:Add, Button, gYield1m w60, 1m
+Gui, YieldButton:Add, Button, gYield2m w60, 2m
+Gui, YieldButton:Add, Button, gYield5m w60, 5m
+Gui, YieldButton:Add, Button, gYield10m w60, 10m
 Gui, YieldButton:Hide
 
 
@@ -594,6 +604,7 @@ EventLoop()
 global timewasted
 static YellowAlert_TickCount:=0
 static last_Min:=-1
+static last_utcHHMM:=""
 
 global ActiveWindowID
 global WindowShown
@@ -628,6 +639,13 @@ for i, id in yellow_alert_ids {
 		break
 	}
 }
+
+; Get the current UTC time
+utcHHMM:=SubStr(A_NowUTC, 9, 4)
+if (utcHHMM=="1102" && last_utcHHMM!="1102") {
+	CloseAllEVEWindows()
+}
+last_utcHHMM := utcHHMM
 
 idle:=round(A_TimeIdle/1000)
 
@@ -699,7 +717,8 @@ if (yellow_alerts_enabled && idle >= yellow_alert_min_idle) {
             ; Position the Yield button in the center of the screen
             yield_x := A_ScreenWidth / 2 - 50
             yield_y := A_ScreenHeight / 2 - 20
-            Gui, YieldButton:Show, x%yield_x% y%yield_y% NoActivate
+            Gui, YieldButton:Show, NoActivate, Yield
+			;Gui, YieldButton:Show, x%yield_x% y%yield_y% NoActivate, Yield
             yield_button_visible := true
         ;}
     }
@@ -883,7 +902,7 @@ Loop,%Windows%
 	groupcount += 1
 	}
 }
-	Splash("Add"+groupcount)
+	;Splash("Add"+groupcount)
 	for i,v in groupid {
 		for j,w in groupid {
 			if (j>0 and w < groupid[j-1]) {
@@ -1103,6 +1122,48 @@ YellowAlertYield() {
     
     Splash("Minimized all Yellow Alert windows")
     return
+}
+
+Yield10s() {
+    YieldAndSetDelay(10)
+}
+
+Yield30s() {
+    YieldAndSetDelay(30)
+}
+
+Yield1m() {
+    YieldAndSetDelay(60)
+}
+
+Yield2m() {
+    YieldAndSetDelay(120)
+}
+
+Yield5m() {
+    YieldAndSetDelay(300)
+}
+
+Yield10m() {
+    YieldAndSetDelay(600)
+}
+
+YieldAndSetDelay(seconds) {
+    global yellow_alert_delay
+    yellow_alert_delay := seconds
+    YellowAlertYield()  ; Call the existing yield function
+}
+
+; Add this function to close all EVE windows
+CloseAllEVEWindows() {
+    WinGet, windows, List
+    Loop, %windows% {
+        this_id := windows%A_Index%
+        WinGetTitle, this_title, ahk_id %this_id%
+        if (InStr(this_title, "EVE") = 1) { ; Check if the title starts with "EVE"
+            WinClose, ahk_id %this_id%
+        }
+    }
 }
 
 Test:
