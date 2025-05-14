@@ -37,7 +37,7 @@ CCP doesn't whitelist scripts, but this does at most one in-game action per clic
 - But you may have to run AutoHotKey.ahk to find the Text:= lines for your machine.
 
 CCP doesn't whitelist scripts, but...
-1) I have asked if a login script was OK, and they *didn't* scream "no" (or respond in any other way to be honest).
+1) I have asked if a login script was OK. CCP by policy did't respond, but I haven't hidden that I am writing this.
 2) This script performs no in-game actions
 3) Reinstalling windows and running this script gives you no advantage over a user that didn't have to reinstall.
 4) Enabling users to easily reinstall and clean off malware is probably a good thing.
