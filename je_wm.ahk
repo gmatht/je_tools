@@ -282,8 +282,8 @@ RoutePlanner() {
 	Gui, YellowAlert:Add, Text, x+10 w80 vYellowAlertCountdown, 0
 	Gui, YellowAlert:Add, Button, x10 y+10 w80 gYellowAlertYield, Yield
 	Gui, YellowAlert:Add, Button, x+10 w80 gYellowAlertClose, Close
-
-Gui, YellowAlert:Hide
+	Gui, YellowAlert:Add, Button, x+10 w80 gRaiseAlertNow, NOW
+	Gui, YellowAlert:Hide
 
 	;Gui, YellowAlert:Show, , Yellow Alert
 
@@ -453,18 +453,14 @@ Tile1() {
 	gTile := TRUE
 	DeleteAll()
 	AddAll()
-	for i,v in groupid {
-		h:= Round(A_ScreenHeight*(0.5+((groupcount-i)*0.5)/groupcount))
-		WinActivate, ahk_id %v%
-		;MsgBox, %h%
-		WinMove, ahk_id %v%,,1,1,%A_ScreenWidth%,%h%
-		
+	for i, v in groupid {
+		h := Round(A_ScreenHeight * (0.5 + ((groupcount - i) * 0.5) / groupcount))
+		WinActivate, ahk_id %v% ; Activate the window before moving
+		WinMove, ahk_id %v%,, 1, 1, %A_ScreenWidth%, %h%
 		Gui, FullScreen%i%: -Caption -Border +ToolWindow +AlwaysOnTop
-		Gui, FullScreen%i%:Add,Button, x0 y0 w256 h32 gFullScreenX, FullScreen %i%
-		h32:=h-60
-		Gui, FullScreen%i%:Show,x0 y%h32%
-		
-		
+		Gui, FullScreen%i%:Add, Button, x0 y0 w256 h32 gFullScreenX, FullScreen %i%
+		h32 := h - 60
+		Gui, FullScreen%i%:Show, x0 y%h32%
 	}
 }
 
@@ -476,7 +472,6 @@ Tile() {
 	gTile := TRUE
 	DeleteAll()
 	AddAll()
-
 
     ; Get taskbar position and dimensions
 	; Loosely based on https://stackoverflow.com/questions/956224/get-available-screen-area-in-autohotkey
@@ -501,13 +496,17 @@ Tile() {
 		h:= Round(ScreenHeight*0.5)
 		v:=groupid[2]
 		WinMove, ahk_id %v%,,1  ,%h%,%w%,%h%
+		WinActivate, ahk_id %v%
 		v:=groupid[3]
 		WinMove, ahk_id %v%,,%w%,%h%,%w%,%h%
+		WinActivate, ahk_id %v%
 	}
 	v:=groupid[0]
 	WinMove, ahk_id %v%,,1  ,1  ,%w%,%h%
+	WinActivate, ahk_id %v%
 	v:=groupid[1]
 	WinMove, ahk_id %v%,,%w%,1  ,%w%,%h%
+	WinActivate, ahk_id %v%
 }
 	
 
@@ -1611,4 +1610,14 @@ Small Auxiliary Thrusters I
 __END FITS__
 
 */
+
+RaiseAlertNow() {
+    global yellow_alert_ids
+    for i, id in yellow_alert_ids {
+        if (WinExist("ahk_id " . id)) {
+            WinActivate, ahk_id %id% ; Activate the window
+        }
+    }
+    Splash("All Yellow Alert windows raised now!")
+}
 
