@@ -702,24 +702,7 @@ if (yellow_alerts_enabled && idle >= yellow_alert_min_idle) {
         
         last_alert_time := current_time
         
-        ; Loop through all yellow alert windows and bring them to the front
-        for i, id in yellow_alert_ids {
-            WinGetTitle, alert_title, ahk_id %id%
-            if (WinExist("ahk_id " . id)) {
-                WinActivate, ahk_id %id%
-                Splash("Yellow Alert: " . alert_title)
-            }
-        }
-        
-        ; Show the floating Yield button if not already visible
-        ;if (!yield_button_visible) {
-            ; Position the Yield button in the center of the screen
-            yield_x := A_ScreenWidth / 2 - 50
-            yield_y := A_ScreenHeight / 2 - 20
-            Gui, YieldButton:Show, NoActivate, Yield
-			;Gui, YieldButton:Show, x%yield_x% y%yield_y% NoActivate, Yield
-            yield_button_visible := true
-        ;}
+		RaiseAlertNow()
     }
 }
 
@@ -936,6 +919,7 @@ CtrlS:
 
 UnDock() {
 	global yellow_alert_ids
+	global yellow_alert_delay
 	global groupcount
 
 	WinGet, this_id, ID, A
@@ -944,7 +928,7 @@ UnDock() {
 		; If there is only one Yellow Alert window, we can yield while autopiloting.
 		if (yellow_alert_ids.Length() == 1) {
 			YellowAlertYield()
-			; TODO: temporarilty set delay to about 10 seconds.
+			yellow_alert_delay:=10
 		}
 	}
 }
@@ -1104,13 +1088,17 @@ sortArray(arr,options="") {	; specify only "Flip" in the options to reverse othe
 }
 
 
+
 YellowAlertYield() {
     global yellow_alert_ids
     
     ; Loop through all yellow alert windows and minimize them
     for i, id in yellow_alert_ids {
         if (WinExist("ahk_id " . id)) {
-            WinMinimize, ahk_id %id%
+			WinGetTitle, this_title, ahk_id %id%
+			if (this_title != "Yellow Alert") {
+            	WinMinimize, ahk_id %id%
+			}
         }
     }
 
@@ -1122,6 +1110,37 @@ YellowAlertYield() {
     Splash("Minimized all Yellow Alert windows")
     return
 }
+
+RaiseAlertNow() {
+    global yellow_alert_ids
+
+    ; Loop through all yellow alert windows and bring them to the front
+    for i, id in yellow_alert_ids {
+            WinGetTitle, alert_title, ahk_id %id%
+            if (WinExist("ahk_id " . id)) {
+                WinActivate, ahk_id %id%
+                ;Splash("Yellow Alert: " . alert_title)
+            }
+    }
+        
+    ; Show the floating Yield button if not already visible
+    ;if (!yield_button_visible) {
+            ; Position the Yield button in the center of the screen
+            ;yield_x := A_ScreenWidth / 2 - 50
+            ;yield_y := A_ScreenHeight / 2 - 20
+            Gui, YieldButton:Show, NoActivate, Yield
+			;Gui, YieldButton:Show, x%yield_x% y%yield_y% NoActivate, Yield
+            yield_button_visible := true
+    ;}
+
+    ;for i, id in yellow_alert_ids {
+    ;    if (WinExist("ahk_id " . id)) {
+    ;        WinActivate, ahk_id %id% ; Activate the window
+    ;    }
+    ;}
+    Splash("All Yellow Alert windows raised now!")
+}
+
 
 Yield10s() {
     YieldAndSetDelay(10)
@@ -1611,13 +1630,4 @@ __END FITS__
 
 */
 
-RaiseAlertNow() {
-    global yellow_alert_ids
-    for i, id in yellow_alert_ids {
-        if (WinExist("ahk_id " . id)) {
-            WinActivate, ahk_id %id% ; Activate the window
-        }
-    }
-    Splash("All Yellow Alert windows raised now!")
-}
 
